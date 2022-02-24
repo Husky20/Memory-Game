@@ -24,10 +24,13 @@ namespace Game {
 
     class GameRemamber {
         ///wybierz poziom trudnosci i na jego podstawie stworz stany
-        private static int NR = 4, NC = 4; //do zmiany
+        private static int NR = 4, NC = 4;
         private State S;
         public GameRemamber() {
             try {
+                if (Level().Equals("H")) {
+                    NR = NC = 8;
+                }
                 S = new State(NR, NC);//do zmiany
                 ///stworzenie gry
                 S.MakeState(FileToArray());
@@ -42,11 +45,14 @@ namespace Game {
                         continue;
                     }
                     ///odkryci wybranej karty
-                    
                     ///sprawdzenie czy jest odkryta jego para
+                    S.ShowCard(answer);
                     ///sprawdzenie czy jest to wygrana
-
-                    ///powrót do początku pętli
+                    if (S.IsWin()) {
+                        S.PrintBoard();
+                        Console.WriteLine("Gratulacje wygrałeś naszą grę, ćwicz pamięć dalej ;)");//debug
+                        break;
+                    }
                 }
             }
             catch {
@@ -118,15 +124,8 @@ namespace Game {
 
         string Level() {
             try {
-                Console.WriteLine("Choose the difficulty level ('Easy' or 'Hard'):");
+                Console.WriteLine("Wybierz poziom trudności ('[E] Easy' or '[H] Hard'):");
                 string level = Console.ReadLine();
-                if (level == "Easy") {
-                    level = "1";
-
-                }
-                if (level == "Hard") {
-                    level = "2";
-                }
                 return level;
             }
             catch (IOException e) {
@@ -137,19 +136,6 @@ namespace Game {
             }
         }
 
-        void RandomWord() {
-            var random = new Random();
-            int nr_words = 4;
-            List<String> Words = FileToArray();
-            int index = random.Next(0, Words.Count());
-
-
-            foreach (String it in Words) {
-                Console.WriteLine(it);
-
-            }
-
-        }
     }
 
     class Field {
@@ -238,16 +224,16 @@ namespace Game {
                     case 3:
                         Console.Write("\n" + "D ");//do zmiany
                         break;
-                    case 5:
+                    case 4:
                         Console.Write("\n" + "E ");//do zmiany
                         break;
-                    case 6:
+                    case 5:
                         Console.Write("\n" + "F ");//do zmiany
                         break;
-                    case 7:
+                    case 6:
                         Console.Write("\n" + "G ");//do zmiany
                         break;
-                    case 8:
+                    case 7:
                         Console.Write("\n" + "H ");//do zmiany
                         break;
                 }
@@ -265,8 +251,41 @@ namespace Game {
 
         }
         
-        public void ShowCard() {
+        public void ShowCard(int[]xy) {
+            Console.Clear();
+            int[] old_show = {0, 0};
+            bool is_show = false;
+            for (int i = 0; i < NR; i++) {
+                for (int j = 0; j < NC; j++) {
+                    if (Board[i, j].hiden == isHiden.show) {
+                        is_show = true;
+                        old_show[0] = i;
+                        old_show[1] = j;
+                        if ((i != xy[0] || j != xy[1]) && Board[xy[0], xy[1]].word.Equals(Board[i, j].word)) {
+                            Board[xy[0], xy[1]].hiden = isHiden.par_swhow;
+                            Board[i, j].hiden = isHiden.par_swhow;
+                        } else {
+                            Board[i, j].hiden = isHiden.hiden;
+                        }
+                        break;
+                    }
+                }
+                if (is_show) {
+                    break;
+                }
+            }
+            if(Board[xy[0], xy[1]].hiden != isHiden.par_swhow)
+                Board[xy[0], xy[1]].hiden = isHiden.show;
+        }
 
+        public bool IsWin() {
+            for (int i = 0; i < NR; i++) {
+                for (int j = 0; j < NC; j++) {
+                    if (Board[i, j].hiden == isHiden.hiden)
+                        return false;
+                }
+            }
+            return true;
         }
     }
 
