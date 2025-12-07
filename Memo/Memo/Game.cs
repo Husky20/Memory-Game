@@ -6,17 +6,12 @@ using System.Threading.Tasks;
 using System.Threading;
 using System.IO;
 
-namespace Game {
-    class Program {
-        static void Main(string[] args) {
-            GameRemamber g = new GameRemamber();
-            Thread.Sleep(50000);
-        }
+namespace Memo {
+    //class Game {
+    //    GameRemamber g = new GameRemamber();
+    //}
 
-
-    }
-
-    enum isHiden{
+    enum isHiden {
         hiden,
         show,
         par_swhow
@@ -26,15 +21,21 @@ namespace Game {
         ///wybierz poziom trudnosci i na jego podstawie stworz stany
         private static int NR = 4, NC = 4;
         private State S;
+        public State GetState() {
+            return S;
+        }
         public GameRemamber() {
+        }
+        public GameRemamber(bool trundy) {
+
             try {
-                if (Level().Equals("H")) {
+                if (trundy) {
                     NR = NC = 8;
                 }
                 S = new State(NR, NC);//do zmiany
                 ///stworzenie gry
                 S.MakeState(FileToArray());
-                while(true){
+                while (true) {
                     ///wypisanie planszy
                     S.PrintBoard();
                     ///input -> wejscie uzytkownika
@@ -49,8 +50,9 @@ namespace Game {
                     S.ShowCard(answer);
                     ///sprawdzenie czy jest to wygrana
                     if (S.IsWin()) {
-                        S.PrintBoard();
-                        Console.WriteLine("Gratulacje wygrałeś naszą grę, ćwicz pamięć dalej ;)");//debug
+                        //S.PrintBoard();
+                        //Console.WriteLine("Gratulacje wygrałeś naszą grę, ćwicz pamięć dalej ;)");//debug
+                        
                         break;
                     }
                 }
@@ -68,7 +70,7 @@ namespace Game {
 
         int[] ReadAnswer() {
             string line = Console.ReadLine();
-            int[] ret = { 0,0};
+            int[] ret = { 0, 0 };
             switch (line.Substring(0, 1)) {
                 case "A":
                     ret[0] = 0;
@@ -134,7 +136,8 @@ namespace Game {
     }
 
     class Field {
-        public Field(String s) {
+        public Field(String s, int _id) {
+            id = _id;
             hiden = isHiden.hiden;
             word = s;
         }
@@ -144,29 +147,28 @@ namespace Game {
         public string word {
             get; set;
         }
+        public int id {
+            get; set;
+        }
 
     }
     class State {
-        
-        
+
+
         //ukryke słowo
         public Field[,] Board;
         public int NR, NC;//liczba wierszy i liczba kolumn
         public State(int nr, int nc) {
             NR = nr; NC = nc;
-            Board = new Field[NR,NC];
-        } 
-        
-        public State(State S) {
-            Board = new Field[NR,NC];
-            for (int i = 0; i < NR; i++)
-                for (int j = 0; j < NC; j++)
-                    Board[i, j] = S.Board[i,j];
-
+            Board = new Field[NR, NC];
         }
 
-        public void Hello() {
-            Console.WriteLine("Hello world");
+        public State(State S) {
+            Board = new Field[NR, NC];
+            for (int i = 0; i < NR; i++)
+                for (int j = 0; j < NC; j++)
+                    Board[i, j] = S.Board[i, j];
+
         }
 
         public void MakeState(List<String> ss) {//do randomizacji
@@ -174,7 +176,7 @@ namespace Game {
 
             List<String> local_words = new List<String>();
             List<int> local_int = new List<int>();
-            foreach(String iterator in ss) {
+            foreach (String iterator in ss) {
                 if (count_words <= 0)
                     break;
                 local_words.Add(iterator);
@@ -182,7 +184,7 @@ namespace Game {
                 --count_words;
             }
             var random = new Random();
-            
+            int id_file = 0;
             for (int i = 0; i < NR; i++) {
                 for (int j = 0; j < NC; j++) {
                     String str;
@@ -195,14 +197,15 @@ namespace Game {
                         }
 
                     }
-                    Board[i, j] = new Field(str);
+                    Board[i, j] = new Field(str, id_file);
+                    id_file++;
                 }
             }
         }
 
         public void PrintBoard() {
             String s = "";
-            for (int j = 1; j < NC+1; j++) {
+            for (int j = 1; j < NC + 1; j++) {
                 Console.Write("  " + j);//do zmiany
             }
             for (int i = 0; i < NR; i++) {
@@ -232,7 +235,7 @@ namespace Game {
                         Console.Write("\n" + "H ");//do zmiany
                         break;
                 }
-                
+
                 for (int j = 0; j < NC; j++) {
                     if (Board[i, j].hiden != isHiden.hiden) {
                         Console.Write(Board[i, j].word + " ");
@@ -245,10 +248,10 @@ namespace Game {
             Console.Write("\n");
 
         }
-        
-        public void ShowCard(int[]xy) {
-            Console.Clear();
-            int[] old_show = {0, 0};
+
+        public void ShowCard(int[] xy) {
+            //Console.Clear();
+            int[] old_show = { 0, 0 };
             bool is_show = false;
             for (int i = 0; i < NR; i++) {
                 for (int j = 0; j < NC; j++) {
@@ -259,7 +262,8 @@ namespace Game {
                         if ((i != xy[0] || j != xy[1]) && Board[xy[0], xy[1]].word.Equals(Board[i, j].word)) {
                             Board[xy[0], xy[1]].hiden = isHiden.par_swhow;
                             Board[i, j].hiden = isHiden.par_swhow;
-                        } else {
+                        }
+                        else {
                             Board[i, j].hiden = isHiden.hiden;
                         }
                         break;
@@ -269,8 +273,27 @@ namespace Game {
                     break;
                 }
             }
-            if(Board[xy[0], xy[1]].hiden != isHiden.par_swhow)
+            if (Board[xy[0], xy[1]].hiden != isHiden.par_swhow)
                 Board[xy[0], xy[1]].hiden = isHiden.show;
+        }
+
+        public void ShowCard(int id) {
+            int[] xy = GetXYFieldById(id);
+            ShowCard(xy);
+        }
+
+        public int[] GetXYFieldById(int id) {
+            int[] ret = { 0, 0 };
+            for (int i = 0; i < NR; i++) {
+                for (int j = 0; j < NC; j++) {
+                    if (Board[i, j] != null && Board[i, j].id == id) {
+                        ret[0] = i;
+                        ret[1] = j;
+                        return ret;
+                    }
+                }
+            }
+            return ret;
         }
 
         public bool IsWin() {
@@ -282,9 +305,59 @@ namespace Game {
             }
             return true;
         }
+        public String GetTextIField(int id) {
+            for (int i = 0; i < NR; i++) {
+                for (int j = 0; j < NC; j++) {
+                    if (Board[i, j] != null && Board[i, j].id == id) {
+                        return Board[i, j].word;
+                    }
+                }
+            }
+            return "";
+        }
+
+        public Field GetFieldById(int id) {
+            for (int i = 0; i < NR; i++) {
+                for (int j = 0; j < NC; j++) {
+                    if (Board[i, j] != null && Board[i, j].id == id) {
+                        return Board[i, j];
+                    }
+                }
+            }
+            return null;
+        }
+
+        public List<String> FileToArray() {
+            List<String> Words = new List<string>();
+            try {
+                using (var file = new StreamReader("Words.txt")) {
+                    while (file.Peek() >= 0) {
+                        string str;
+                        str = file.ReadLine();
+                        Words.Add(str);
+
+                    }
+                    return Words;
+                }
+
+            }
+            catch (IOException e) {
+                Console.WriteLine("The file could not be read:");
+                Console.WriteLine(e.Message);
+                return null;
+            }
+        }
+        public bool IsOKIN(int i) {
+            try {
+                GetTextIField(i);
+                return true;
+            }
+            catch {
+                return false;
+            }
+        }
+
+
     }
 
-   
-
-        
 }
